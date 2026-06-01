@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hisaab — AI back-office for freelancers</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="logo">حساب</span>
+      <div>
+        <h1>Hisaab</h1>
+        <p>AI back-office for Pakistani freelancers — invoicing, payments &amp; FBR tax</p>
+      </div>
+    </div>
+    <div class="pill" id="mode">rule-based</div>
+  </header>
+
+  <main>
+    <section class="chat">
+      <div id="messages" class="messages"></div>
+      <div class="quick">
+        <button data-q="What's the best way to receive $2000 from a US client?">💱 Receive $2000</button>
+        <button data-q="Invoice Acme Corp for $800">🧾 Invoice</button>
+        <button data-q="Tax on $1500 per month, PSEB registered">📊 Tax estimate</button>
+        <button data-q="Review this contract: The client may terminate at any time at its sole discretion. Unlimited revisions included. Net 60 payment terms. All intellectual property rights transfer on signing. Contractor shall indemnify and hold harmless the client.">📄 Review contract</button>
+      </div>
+      <form id="composer">
+        <input id="input" autocomplete="off" placeholder="Ask anything: “best way to get paid $3000”, “invoice Globex $1200”…" />
+        <button type="submit">Send</button>
+      </form>
+    </section>
+
+    <aside class="panel">
+      <div id="card" class="card empty">
+        <h3>Live results</h3>
+        <p>Structured output from the agent appears here — rail comparisons, tax breakdowns, and invoice previews.</p>
+      </div>
+    </aside>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>
