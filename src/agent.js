@@ -3,7 +3,7 @@
 // Works fully offline (rule-based). If OPENAI_API_KEY is set, free-form questions
 // are answered by the LLM while structured actions still run deterministically.
 
-import { rankRails, PKR_PER_USD_INTERBANK } from './forex.js';
+import { rankRails, rankRailsLive, getInterbankRate, PKR_PER_USD_INTERBANK } from './forex.js';
 import { estimateTax } from './tax.js';
 import { buildInvoice } from './invoice.js';
 import { reviewContract } from './contract.js';
@@ -23,7 +23,7 @@ export async function handleMessage(message, ctx = {}) {
   // 1) Currency / payment rail optimization
   if (/(receive|withdraw|get paid|payoneer|paypal|wise|best (way|rail)|convert|currency|exchange)/i.test(low)) {
     const usd = extractUsd(text) || 1000;
-    const r = rankRails(usd);
+    const r = await rankRailsLive(usd);
     const lines = r.results
       .map(
         (x) =>
@@ -31,10 +31,13 @@ export async function handleMessage(message, ctx = {}) {
           `(cost ${x.totalCostPct}% · ${x.speedDays}d)`
       )
       .join('\n');
+    const rateLine = r.rate.live
+      ? `live interbank ${r.rate.rate.toFixed(2)} (${r.rate.source})`
+      : `interbank ≈ ${r.rate.rate} (offline fallback)`;
     return {
       reply:
         `For **$${usd.toLocaleString()}**, here's what you'd actually receive in PKR ` +
-        `(interbank ≈ ${PKR_PER_USD_INTERBANK}):\n\n${lines}\n\n` +
+        `(${rateLine}):\n\n${lines}\n\n` +
         `✅ Best compliant option: **${r.best.name}** — PKR ${r.best.netPkr.toLocaleString()}. ` +
         `Choosing it over the worst option saves ~PKR ${r.savingsPkr.toLocaleString()}.`,
       card: { type: 'forex', data: r }
@@ -45,7 +48,8 @@ export async function handleMessage(message, ctx = {}) {
   if (/(tax|fbr|pseb|filer|return|how much.*owe)/i.test(low)) {
     const usd = extractUsd(text) || 1500;
     const pseb = /pseb|registered/i.test(low) && !/not\s+registered|no pseb/i.test(low);
-    const est = estimateTax({ monthlyUsd: usd, psebRegistered: pseb });
+    const rate = await getInterbankRate();
+    const est = estimateTax({ monthlyUsd: usd, psebRegistered: pseb, interbankRate: rate.rate });
     return {
       reply:
         `On ~$${usd.toLocaleString()}/month (PKR ${est.annualPkr.toLocaleString()}/yr export income):\n\n` +

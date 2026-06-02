@@ -14,7 +14,8 @@ the wedge.
 
 ## What the POC demonstrates
 1. **💱 Payment-rail optimizer** — given a USD amount, ranks Payoneer / Wise / Bank /
-   Raast / PayPal by what you *actually* receive in PKR, with availability + fees.
+   Raast / PayPal by what you *actually* receive in PKR, using a **live USD→PKR feed**
+   (open.er-api.com, cached hourly, static fallback) with per-rail fees + availability.
 2. **🧾 Invoice generation** — natural language → printable, export-tax-aware invoice.
 3. **📊 FBR tax estimator** — final-tax regime for IT/ITeS exports (0.25% PSEB vs 1%),
    monthly reserve, and actionable tips.
@@ -54,9 +55,11 @@ public/        chat UI + live results panel
 ```
 
 ## POC scope / honesty
-- FX rates, fees, and tax rates are **illustrative defaults** for demonstration — wire
-  them to live FX APIs and current FBR rules for production.
+- **USD→PKR FX is live** (open.er-api.com, no key, cached 1h, falls back to a static rate
+  offline). Per-rail **fees/spreads and tax rates are illustrative defaults** — wire them
+  to rail-specific APIs and current FBR rules for production.
 - Contract review is heuristic; pair with an LLM for nuanced clauses.
+- Market figures in `THESIS.md` cite PSEB/SBP FY2024-25; leakage % is a blended estimate.
 - Not financial or tax advice.
 
 ## What "real" looks like next

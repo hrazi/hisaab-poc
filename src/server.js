@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, extname } from 'node:path';
 import { handleMessage } from './agent.js';
-import { rankRails } from './forex.js';
+import { rankRailsLive, getInterbankRate } from './forex.js';
 import { estimateTax } from './tax.js';
 import { buildInvoice } from './invoice.js';
 import { reviewContract } from './contract.js';
@@ -46,7 +46,10 @@ const server = http.createServer(async (req, res) => {
     }
     if (req.method === 'POST' && url.pathname === '/api/forex') {
       const { amountUsd } = await readBody(req);
-      return send(res, 200, rankRails(Number(amountUsd) || 1000));
+      return send(res, 200, await rankRailsLive(Number(amountUsd) || 1000));
+    }
+    if (req.method === 'GET' && url.pathname === '/api/rate') {
+      return send(res, 200, await getInterbankRate());
     }
     if (req.method === 'POST' && url.pathname === '/api/tax') {
       return send(res, 200, estimateTax(await readBody(req)));

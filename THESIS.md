@@ -7,9 +7,10 @@ instead of handing you another dashboard.
 ---
 
 ## The one-liner
-Pakistan exports ~$3B/year in IT & freelance services, but the people earning it lose
-4–8% on every payment and navigate FBR compliance alone. Hisaab is an AI agent that
-runs their entire money back-office over chat.
+Pakistan exported a record **$3.8B in IT & ITeS services in FY2024-25** (+18% YoY), of
+which freelancers contributed **~$750M** — but the people earning it lose 4–8% on every
+payment and navigate FBR compliance alone. Hisaab is an AI agent that runs their entire
+money back-office over chat.
 
 ---
 
@@ -21,13 +22,16 @@ runs their entire money back-office over chat.
 - **AI crossed the "does it" threshold.** LLM agents can now *take actions* (draft
   invoices, choose rails, prepare filings), not just advise. The product that was
   impossible in 2021 ships in 2026.
-- **The export base is large and growing.** Pakistan is a top-5 global freelancer market
-  by headcount, with a young, English-capable, mobile-first workforce.
+- **The export base is large and growing fast.** Pakistan is a **top-5 global freelance
+  market** with **~2.32M freelancers**; IT/ITeS exports grew ~18% YoY to a record $3.8B,
+  and freelance exports jumped ~90%+ YoY to ~$750M.
 
 ---
 
 ## The pain (real, validated, recurring)
-- **~2M+ freelancers** earning foreign income.
+- **~2.32M freelancers** earning foreign income (top-5 globally).
+- **~$750M/yr** in freelance export remittances flowing through fee-heavy rails — part of
+  a **$3.8B/yr** total IT/ITeS export base.
 - **4–8% leakage per payment** from FX spreads + fees across Payoneer / Wise / SWIFT,
   with PayPal absent entirely.
 - **FBR complexity** — final-tax regime, PSEB registration (0.25% vs 1%), Active
@@ -35,8 +39,14 @@ runs their entire money back-office over chat.
   inconsistent accountants.
 - It happens **every single payment cycle**, not once. High frequency = high retention.
 
-**Illustrative pool:** 2M users × ~$6,000 avg annual foreign income × 5% blended
-leakage ≈ **$600M/year** of value bleeding out — the pool Hisaab recaptures and shares.
+**Value pool (grounded estimate):**
+- *Serviceable today (freelancers):* ~$750M flow × ~5% blended leakage ≈ **$38M/yr** of
+  value bleeding out — the pool Hisaab recaptures and shares.
+- *Expansion (full IT/ITeS export base):* $3.8B × ~5% ≈ **$190M/yr** as the product moves
+  from freelancers to small IT firms and agencies.
+
+*Figures: PSEB / SBP / Ministry of IT, FY2024-25 (reported mid-2025). Leakage % is an
+illustrative blended assumption — validate per-rail before diligence.*
 
 ---
 

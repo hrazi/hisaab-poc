@@ -57,13 +57,16 @@ function renderCard(c) {
         <td class="num">${r.totalCostPct}%</td><td class="num">${r.speedDays}d</td>
       </tr>`).join('');
     card.innerHTML = `<h3>💱 Payment rail comparison — $${d.amountUsd.toLocaleString()}</h3>
+      ${d.rate ? `<p style="font-size:12px;margin:0 0 6px">${d.rate.live
+        ? `🟢 Live interbank <strong>${d.rate.rate.toFixed(2)} PKR/USD</strong> · ${d.rate.source}${d.rate.updated ? ' · ' + d.rate.updated : ''}`
+        : `🟠 Offline fallback rate <strong>${d.rate.rate} PKR/USD</strong>`}</p>` : ''}
       <div class="kpi">
         <div class="box"><b>${d.best.name}</b><span>best compliant rail</span></div>
         <div class="box"><b>PKR ${d.savingsPkr.toLocaleString()}</b><span>saved vs worst option</span></div>
       </div>
       <table><thead><tr><th>Rail</th><th>Status</th><th class="num">You receive</th><th class="num">Cost</th><th class="num">Speed</th></tr></thead>
       <tbody>${rows}</tbody></table>
-      <p style="font-size:12px;color:#6b7280;margin-top:12px">Illustrative rates for demo. PayPal’s unavailability is the core market gap.</p>`;
+      <p style="font-size:12px;color:#6b7280;margin-top:12px">FX rate is live; rail fees/spreads are illustrative defaults. PayPal’s unavailability is the core market gap.</p>`;
   } else if (c.type === 'tax') {
     const d = c.data;
     card.innerHTML = `<h3>📊 FBR tax estimate</h3>
