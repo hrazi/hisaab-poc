@@ -1,7 +1,7 @@
 {
   "name": "hisaab-poc",
   "version": "0.1.0",
-  "description": "AI-native back-office agent for Pakistani freelancers (POC)",
+  "description": "AI-native budgeting app for couples — expenses, income, budgets & savings goals",
   "type": "module",
   "main": "src/server.js",
   "scripts": {

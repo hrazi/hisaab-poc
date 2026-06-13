@@ -1,12 +1,36 @@
 const messages = document.getElementById('messages');
-const card = document.getElementById('card');
 const input = document.getElementById('input');
+const month = new Date().toISOString().slice(0, 7);
+
+document.getElementById('month-label').textContent =
+  new Date().toLocaleString('en', { month: 'long', year: 'numeric' });
+
+// Tab switching
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
+  });
+});
 
 function md(s) {
   return s
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
     .replace(/\n/g, '<br>');
+}
+
+function fmt(n) {
+  if (typeof n !== 'number') return '$0.00';
+  return '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+function pctBar(pct) {
+  const cls = pct >= 100 ? 'over' : pct >= 80 ? 'warn' : 'ok';
+  return `<div class="bar-track"><div class="bar-fill ${cls}" style="width:${Math.min(100, pct)}%"></div></div>`;
 }
 
 function addMsg(text, who) {
@@ -24,6 +48,7 @@ async function send(text) {
   typing.className = 'msg bot';
   typing.textContent = '…';
   messages.appendChild(typing);
+  messages.scrollTop = messages.scrollHeight;
   try {
     const res = await fetch('/api/chat', {
       method: 'POST',
@@ -33,72 +58,121 @@ async function send(text) {
     const data = await res.json();
     typing.remove();
     addMsg(data.reply, 'bot');
-    if (data.card) renderCard(data.card);
-  } catch (e) {
+    if (data.card) applyCard(data.card);
+  } catch {
     typing.remove();
-    addMsg('⚠️ Error reaching agent. Is the server running?', 'bot');
+    addMsg('Error reaching agent. Is the server running?', 'bot');
   }
 }
 
-function tag(av) {
-  const m = { available: ['green', '🟢 available'], limited: ['yellow', '🟡 limited'], unavailable: ['red', '🔴 unavailable'] };
-  const [c, l] = m[av] || ['', av];
-  return `<span class="tag ${c}">${l}</span>`;
-}
-
-function renderCard(c) {
-  card.classList.remove('empty');
-  if (c.type === 'forex') {
-    const d = c.data;
-    const rows = d.results.map(r => `
-      <tr class="${r.id === d.best.id ? 'best' : ''}">
-        <td>${r.name}</td><td>${tag(r.availability)}</td>
-        <td class="num">PKR ${r.netPkr.toLocaleString()}</td>
-        <td class="num">${r.totalCostPct}%</td><td class="num">${r.speedDays}d</td>
-      </tr>`).join('');
-    card.innerHTML = `<h3>💱 Payment rail comparison — $${d.amountUsd.toLocaleString()}</h3>
-      ${d.rate ? `<p style="font-size:12px;margin:0 0 6px">${d.rate.live
-        ? `🟢 Live interbank <strong>${d.rate.rate.toFixed(2)} PKR/USD</strong> · ${d.rate.source}${d.rate.updated ? ' · ' + d.rate.updated : ''}`
-        : `🟠 Offline fallback rate <strong>${d.rate.rate} PKR/USD</strong>`}</p>` : ''}
-      <div class="kpi">
-        <div class="box"><b>${d.best.name}</b><span>best compliant rail</span></div>
-        <div class="box"><b>PKR ${d.savingsPkr.toLocaleString()}</b><span>saved vs worst option</span></div>
-      </div>
-      <table><thead><tr><th>Rail</th><th>Status</th><th class="num">You receive</th><th class="num">Cost</th><th class="num">Speed</th></tr></thead>
-      <tbody>${rows}</tbody></table>
-      <p style="font-size:12px;color:#6b7280;margin-top:12px">FX rate is live; rail fees/spreads are illustrative defaults. PayPal’s unavailability is the core market gap.</p>`;
-  } else if (c.type === 'tax') {
-    const d = c.data;
-    card.innerHTML = `<h3>📊 FBR tax estimate</h3>
-      <div class="kpi">
-        <div class="box"><b>PKR ${d.finalTaxPkr.toLocaleString()}</b><span>annual tax (${d.rateLabel})</span></div>
-        <div class="box"><b>${d.effectivePct}%</b><span>effective rate</span></div>
-        <div class="box"><b>PKR ${d.monthlyReservePkr.toLocaleString()}</b><span>set aside / month</span></div>
-      </div>
-      <p style="font-size:13px"><strong>Annual export income:</strong> PKR ${d.annualPkr.toLocaleString()}</p>
-      ${d.tips.map(t => `<div class="flag info">${t}</div>`).join('')}
-      <p style="font-size:12px;color:#6b7280">Illustrative — not tax advice.</p>`;
-  } else if (c.type === 'invoice') {
-    const d = c.data;
-    const blob = new Blob([d.html], { type: 'text/html' });
-    const urlObj = URL.createObjectURL(blob);
-    card.innerHTML = `<h3>🧾 ${d.number}</h3>
-      <iframe srcdoc="${d.html.replace(/"/g, '&quot;')}"></iframe>
-      <a class="dl" href="${urlObj}" target="_blank">Open / Print to PDF →</a>`;
-  } else if (c.type === 'contract') {
-    const d = c.data;
-    card.innerHTML = `<h3>📄 Contract review — ${d.score}/100</h3>
-      ${d.findings.length ? d.findings.map(f => `<div class="flag ${f.severity}"><strong>${f.flag}</strong><br>${f.why}</div>`).join('')
-        : '<p>No common red flags detected.</p>'}`;
+function applyCard(card) {
+  if (card.type === 'dashboard') {
+    const d = card.data;
+    renderOverview(d);
+    renderExpenses(d);
+    renderGoals(d);
+    document.querySelector('.tab[data-tab="overview"]').click();
   }
 }
 
-document.getElementById('composer').addEventListener('submit', (e) => {
+function renderOverview(d) {
+  const net = d.netBalance;
+  const netClass = net >= 0 ? 'positive' : 'negative';
+  const netStr = net >= 0 ? `+${fmt(net)}` : `-${fmt(Math.abs(net))}`;
+
+  const incomeRows = [
+    { name: d.names.p1, amount: d.incomeBreakdown.p1 },
+    { name: d.names.p2, amount: d.incomeBreakdown.p2 }
+  ].filter(r => r.amount > 0)
+    .map(r => `<tr><td>${r.name}</td><td class="num">${fmt(r.amount)}</td></tr>`).join('') ||
+    '<tr><td colspan="2" class="muted-cell">No income logged yet</td></tr>';
+
+  const catRows = d.byCategory.length
+    ? d.byCategory.map(c => `<tr><td>${c.name}</td><td class="num">${fmt(c.total)}</td></tr>`).join('')
+    : '<tr><td colspan="2" class="muted-cell">No expenses yet</td></tr>';
+
+  const budgetSection = d.budgets.length ? `
+    <h4>Budget vs. actual</h4>
+    ${d.budgets.map(b => `
+      <div class="budget-row">
+        <div class="budget-label"><span>${b.name}</span><span>${fmt(b.spent)} / ${fmt(b.monthly_limit)}</span></div>
+        ${pctBar(b.pct)}
+      </div>`).join('')}` : '';
+
+  document.getElementById('tab-overview').innerHTML = `
+    <div class="kpi">
+      <div class="box"><b>${fmt(d.totalIncome)}</b><span>Income</span></div>
+      <div class="box"><b>${fmt(d.totalExpenses)}</b><span>Expenses</span></div>
+      <div class="box ${netClass}"><b>${netStr}</b><span>${net >= 0 ? 'Saved' : 'Over budget'}</span></div>
+    </div>
+    <h4>Income breakdown</h4>
+    <table><tbody>${incomeRows}</tbody></table>
+    <h4>Spending by category</h4>
+    <table><tbody>${catRows}</tbody></table>
+    ${budgetSection}`;
+}
+
+function renderExpenses(d) {
+  const pane = document.getElementById('tab-expenses');
+  if (!d.recentExpenses.length) {
+    pane.innerHTML = '<div class="empty-state"><p>No expenses this month yet.</p><p>Try: <em>"spent $45 on groceries"</em></p></div>';
+    return;
+  }
+  const rows = d.recentExpenses.map(e => `
+    <tr>
+      <td>${e.date.slice(5)}</td>
+      <td>${e.description}</td>
+      <td><span class="cat-tag">${e.category}</span></td>
+      <td class="num">${fmt(e.amount)}</td>
+    </tr>`).join('');
+  pane.innerHTML = `
+    <p class="summary-line">${d.expenseCount} expense${d.expenseCount !== 1 ? 's' : ''} · ${fmt(d.totalExpenses)} total</p>
+    <table>
+      <thead><tr><th>Date</th><th>Description</th><th>Category</th><th class="num">Amount</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+function renderGoals(d) {
+  const pane = document.getElementById('tab-goals');
+  if (!d.goals.length) {
+    pane.innerHTML = '<div class="empty-state"><p>No savings goals yet.</p><p>Try: <em>"save $5000 for vacation"</em></p></div>';
+    return;
+  }
+  const goalCards = d.goals.map(g => {
+    const pct = g.target_amount > 0 ? Math.round((g.current_amount / g.target_amount) * 100) : 0;
+    return `
+      <div class="goal-card">
+        <div class="goal-header">
+          <strong>${g.name}</strong>
+          <span class="goal-pct ${pct >= 100 ? 'done' : ''}">${pct}%</span>
+        </div>
+        ${pctBar(pct)}
+        <div class="goal-amounts">${fmt(g.current_amount)} of ${fmt(g.target_amount)}${g.deadline ? ` · by ${g.deadline}` : ''}</div>
+      </div>`;
+  }).join('');
+  pane.innerHTML = `<div class="goals-list">${goalCards}</div>`;
+}
+
+async function loadDashboard() {
+  try {
+    const res = await fetch(`/api/dashboard?month=${month}`);
+    const d = await res.json();
+    renderOverview(d);
+    renderExpenses(d);
+    renderGoals(d);
+  } catch { /* server not ready */ }
+}
+
+document.getElementById('composer').addEventListener('submit', e => {
   e.preventDefault();
   const t = input.value.trim();
   if (t) send(t);
 });
+
 document.querySelectorAll('.quick button').forEach(b =>
   b.addEventListener('click', () => send(b.dataset.q)));
 
-addMsg("👋 I'm **Hisaab**, your AI back-office. Try a quick action below, or ask me how to get paid, invoice a client, or estimate your FBR tax.", 'bot');
+addMsg("Hi! I'm **Hisaab**, your couples budgeting assistant. Log expenses, track income, set budgets, and build savings goals — all from chat.", 'bot');
+
+loadDashboard();
